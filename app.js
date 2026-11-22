@@ -40,6 +40,7 @@
   let studentConnection = null;
   let reconnectTimer = null;
   let joinTimer = null;
+  let hostOpenTimer = null;
   let toastTimer = null;
   let expectedRoomEnd = false;
   let offlineNoticeShown = false;
@@ -515,6 +516,24 @@
     });
     hostPeer.on('disconnected', updatePeerConnectionStatus);
     hostPeer.on('error', (error) => {
+      clearTimeout(hostOpenTimer);
+      // If PeerServer never accepted the teacher's room, return to the start
+      // screen instead of leaving the Start class button stuck in a busy state.
+      if (!hostPeer.open && role === 'host') {
+        $('#class-action').disabled = false;
+        setStatus('Could not open class', 'error');
+        setToast(showErrorToast(error.type), true);
+        if (peer === hostPeer) peer = null;
+        try { hostPeer.destroy(); } catch (_) { /* already closed */ }
+        role = 'visitor';
+        currentUser = null;
+        roomCode = '';
+        setRoomUrl('');
+        setRoomDisplay('');
+        $('#desk-subtitle').textContent = 'Your class starts here';
+        $('#class-action-label').textContent = 'Try again';
+        return;
+      }
       if (error.type === 'unavailable-id') {
         setStatus('Room code unavailable', 'error');
         $('#class-action').disabled = false;
@@ -561,7 +580,24 @@
     const hostPeer = new window.Peer(peerIdForCode(code), buildPeerOptions(1));
     peer = hostPeer;
     installHostConnectionHandlers(hostPeer);
+    clearTimeout(hostOpenTimer);
+    hostOpenTimer = window.setTimeout(() => {
+      if (peer !== hostPeer || role !== 'host' || hostPeer.open) return;
+      $('#class-action').disabled = false;
+      setStatus('Live service did not respond', 'error');
+      setToast('The teacher could not reach the PeerJS live connection service. Check the network, then try again. TURN cannot fix a blocked signaling-server connection.', true);
+      try { hostPeer.destroy(); } catch (_) { /* already closed */ }
+      peer = null;
+      role = 'visitor';
+      currentUser = null;
+      roomCode = '';
+      setRoomUrl('');
+      setRoomDisplay('');
+      $('#desk-subtitle').textContent = 'Your class starts here';
+      $('#class-action-label').textContent = 'Try again';
+    }, 15000);
     hostPeer.on('open', () => {
+      clearTimeout(hostOpenTimer);
       if (peer !== hostPeer || role !== 'host') return;
       $('#class-action').disabled = false;
       setRoomUrl(code);
@@ -832,7 +868,21 @@
     const hostPeer = new window.Peer(peerIdForCode(code), buildPeerOptions(1));
     peer = hostPeer;
     installHostConnectionHandlers(hostPeer);
+    clearTimeout(hostOpenTimer);
+    hostOpenTimer = window.setTimeout(() => {
+      if (peer !== hostPeer || role !== 'host' || hostPeer.open) return;
+      setStatus('Live service did not respond', 'error');
+      setToast('Could not reopen the classroom because the live connection service did not respond. Reload and try again.', true);
+      try { hostPeer.destroy(); } catch (_) { /* already closed */ }
+      peer = null;
+      role = 'visitor';
+      currentUser = null;
+      roomCode = '';
+      setRoomUrl('');
+      setRoomDisplay('');
+    }, 15000);
     hostPeer.on('open', () => {
+      clearTimeout(hostOpenTimer);
       setRoomDisplay(code);
       setRoomUrl(code);
       setChatEnabled(true);
