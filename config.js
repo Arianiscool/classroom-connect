@@ -1,26 +1,36 @@
-// Optional connection settings for Classroom Connect.
+// Classroom Connect connection settings.
 //
-// Leave peerServer.host empty to use PeerJS Cloud.
-// If your network cannot reach PeerJS Cloud, point this at a PeerServer
-// that you control and have deployed over HTTPS/WSS.
+// Both the teacher and students load this file before app.js.
+// PeerJS's documented shared ICE configuration is listed below.
+// It includes STUN plus PeerJS's public TURN relay endpoints.
 //
-// For networks that cannot make direct browser-to-browser connections,
-// add TURN servers supplied by your hosting provider. STUN alone is not
-// a guaranteed relay and cannot solve every NAT/firewall combination.
+// For a long-term/public deployment, use a TURN provider with temporary
+// credentials and replace the PeerJS TURN entry. Do not publish private,
+// permanent TURN credentials in a public GitHub repository.
 //
-// Example:
-// window.CLASSROOM_CONNECT_CONFIG = {
-//   publicAppUrl: 'https://your-site.example/',
-//   peerServer: { host: 'peer.example.com', port: 443, path: '/', secure: true, key: 'peerjs' },
-//   rtcConfig: {
-//     iceServers: [
-//       { urls: 'stun:stun.l.google.com:19302' },
-//       { urls: 'turn:turn.example.com:3478', username: 'YOUR_USERNAME', credential: 'YOUR_PASSWORD' },
-//     ],
-//   },
-// };
+// If you run your own PeerServer, fill in peerServer below.
+// Otherwise leave it null to use PeerJS Cloud over port 443.
+
 window.CLASSROOM_CONNECT_CONFIG = {
+  // Leave empty to use the current website URL automatically.
   publicAppUrl: '',
+
+  // Optional self-hosted PeerServer settings.
   peerServer: null,
-  rtcConfig: null,
+
+  // Applied to BOTH teacher and student Peer connections by app.js.
+  rtcConfig: {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      {
+        urls: [
+          'turn:eu-0.turn.peerjs.com:3478',
+          'turn:us-0.turn.peerjs.com:3478'
+        ],
+        username: 'peerjs',
+        credential: 'peerjsp'
+      }
+    ],
+    sdpSemantics: 'unified-plan'
+  }
 };
