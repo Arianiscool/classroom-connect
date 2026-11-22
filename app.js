@@ -281,6 +281,26 @@
     return `cc-${code.replace(/^CC-/i, '').toLowerCase()}`;
   }
 
+  // Read optional signaling-server and ICE/TURN settings from config.js.
+  // Keeping this in one place ensures the teacher and students use the
+  // same PeerServer and WebRTC configuration.
+  function buildPeerOptions(debug = 1) {
+    const config = window.CLASSROOM_CONNECT_CONFIG || {};
+    const options = { debug };
+    const server = config.peerServer;
+    if (server && typeof server === 'object' && server.host) {
+      options.host = server.host;
+      if (Number.isFinite(Number(server.port))) options.port = Number(server.port);
+      if (typeof server.path === 'string') options.path = server.path;
+      if (typeof server.secure === 'boolean') options.secure = server.secure;
+      if (typeof server.key === 'string' && server.key) options.key = server.key;
+    }
+    if (config.rtcConfig && typeof config.rtcConfig === 'object') {
+      options.config = config.rtcConfig;
+    }
+    return options;
+  }
+
   function setRoomDisplay(code) {
     roomCode = code || '';
     $('#class-code').textContent = code || '— — — — — —';
@@ -339,7 +359,9 @@
       'webrtc': 'Your browser could not establish a direct connection. Try again on another network or browser.',
       'browser-incompatible': 'This browser does not support live classroom connections.',
     };
-    return messages[error] || 'Could not connect right now. Please try again in a moment.';
+    return messages[error] || (error
+      ? `Connection failed (${error}). Check the class code, internet access, and network settings, then try again.`
+      : 'Could not connect right now. Please try again in a moment.');
   }
 
   function failPendingJoin(message) {
@@ -536,7 +558,7 @@
     $('#code-hint').textContent = 'Connecting to your classroom…';
     $('#desk-subtitle').textContent = 'Opening your classroom…';
     setStatus('Opening class…', 'busy');
-    const hostPeer = new window.Peer(peerIdForCode(code), { debug: 1 });
+    const hostPeer = new window.Peer(peerIdForCode(code), buildPeerOptions(1));
     peer = hostPeer;
     installHostConnectionHandlers(hostPeer);
     hostPeer.on('open', () => {
@@ -621,7 +643,7 @@
       clearTimeout(joinTimer);
       joinTimer = window.setTimeout(() => {
         if (role !== 'student') {
-          showJoinError('The teacher’s classroom did not respond. Check that the class is still open and try again.');
+          showJoinError('The teacher’s classroom did not respond. Check that the class is still open. If both devices are online but cannot connect, this network may require a TURN relay configured by the site owner.');
           $('#join-submit').disabled = false;
           $('#join-submit-label').textContent = 'Join the class';
           setStatus('Waiting for teacher', 'error');
@@ -697,9 +719,9 @@
     // Cover both stages: connecting to PeerServer and opening the WebRTC data channel.
     // Previously the UI could wait forever if either stage never emitted its open event.
     joinTimer = window.setTimeout(() => {
-      failPendingJoin('Still unable to reach the classroom. Check the class code, make sure the teacher is online, and try again.');
+      failPendingJoin('The connection did not finish. Check that the teacher is still online and that both devices can reach the live connection service. If this happens on different networks, the app may need a TURN relay configured in config.js.');
     }, 25000);
-    const studentPeer = new window.Peer({ debug: 2 });
+    const studentPeer = new window.Peer(buildPeerOptions(2));
     peer = studentPeer;
     studentPeer.on('open', () => {
       if (requestId === joinRequestId && peer === studentPeer) connectStudentToHost(studentPeer);
@@ -807,7 +829,7 @@
     currentUser = { id: 'teacher', name: 'Teacher', avatar: 'teacher' };
     expectedRoomEnd = false;
     setStatus('Reopening your classroom…', 'busy');
-    const hostPeer = new window.Peer(peerIdForCode(code), { debug: 1 });
+    const hostPeer = new window.Peer(peerIdForCode(code), buildPeerOptions(1));
     peer = hostPeer;
     installHostConnectionHandlers(hostPeer);
     hostPeer.on('open', () => {
