@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f5f3ec" />
+    <meta name="description" content="A cozy online classroom where classmates can meet and chat." />
+    <title>Classroom Connect</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="config.js"></script>
+    <script defer src="app.js"></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <a class="brand" href="./" aria-label="Classroom Connect home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 44 44" fill="none">
+              <rect x="4" y="5" width="36" height="34" rx="12" fill="currentColor" />
+              <path d="M12 16h20M12 22h12M15 30l-3 4 8-3" stroke="#F8F5EC" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+              <circle cx="30" cy="29" r="3.5" fill="#E6B86B" />
+            </svg>
+          </span>
+          <span class="brand-name">classroom<span>connect</span></span>
+        </a>
+        <div class="topbar-center"><span class="sparkle" aria-hidden="true">✳</span> A little closer, wherever you learn.</div>
+        <div id="status-pill" class="status-pill" role="status" aria-live="polite">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span id="status-label">Ready to begin</span>
+        </div>
+      </header>
+
+      <main class="app-layout">
+        <section class="room-column" aria-labelledby="page-title">
+          <div class="page-intro">
+            <div>
+              <div class="eyebrow"><span class="eyebrow-line"></span> YOUR SHARED LEARNING SPACE</div>
+              <h1 id="page-title">Pull up a chair<span class="title-period">.</span></h1>
+              <p class="intro-copy">Bring your class together in a room made for good questions and great company.</p>
+            </div>
+            <div class="intro-actions">
+              <button id="join-with-code" class="join-code-link" type="button">Have a class code? <strong>Join here →</strong></button>
+              <div class="class-tag"><span class="tag-icon" aria-hidden="true">✎</span><span id="room-caption">A new classroom</span></div>
+            </div>
+          </div>
+
+          <section class="classroom" aria-label="Top-down classroom seating plan">
+            <div class="classroom-grain" aria-hidden="true"></div>
+            <div class="room-board">
+              <div class="board-copy">
+                <span class="board-overline">WELCOME IN</span>
+                <div id="board-title" class="board-title">Good things happen<br />when we learn together.</div>
+              </div>
+              <div class="board-doodles" aria-hidden="true">
+                <span class="doodle-sun">☼</span>
+                <span class="doodle-star">✳</span>
+                <span class="doodle-book">⌁</span>
+              </div>
+              <div class="board-ledge" aria-hidden="true"><span></span><span></span><span></span></div>
+            </div>
+
+            <section class="teacher-desk" aria-label="Teacher desk and class controls">
+              <div class="desk-plant" aria-hidden="true"><span>♧</span></div>
+              <div class="desk-main">
+                <div class="desk-label-row">
+                  <div class="teacher-badge" aria-hidden="true">✿</div>
+                  <div>
+                    <div class="desk-kicker">TEACHER'S DESK</div>
+                    <div id="desk-subtitle" class="desk-subtitle">Your class starts here</div>
+                  </div>
+                </div>
+                <div class="desk-controls">
+                  <div class="code-card">
+                    <span class="code-label">CLASS CODE</span>
+                    <strong id="class-code">— — — — — —</strong>
+                    <span id="code-hint" class="code-hint">A room code appears when class starts</span>
+                  </div>
+                  <button id="class-action" class="start-button" type="button">
+                    <span id="class-action-icon" aria-hidden="true">↗</span>
+                    <span id="class-action-label">Start class</span>
+                  </button>
+                </div>
+              </div>
+              <div class="desk-pencil" aria-hidden="true"></div>
+            </section>
+
+            <div id="invite-panel" class="invite-panel" hidden>
+              <div class="invite-copy">
+                <span class="invite-check" aria-hidden="true">✓</span>
+                <div><strong id="invite-heading">Your classroom is open!</strong><span id="invite-instructions">Send this link to your classmates to invite them in.</span></div>
+              </div>
+              <div class="link-copy-row">
+                <span id="invite-link" class="invite-link"></span>
+                <button id="copy-link" class="copy-button" type="button"><span aria-hidden="true">▢</span> <span id="copy-link-label">Copy link</span></button>
+              </div>
+            </div>
+
+            <div class="seating-heading">
+              <div><span class="section-kicker">THE CLASSROOM</span><h2>Pick a seat, stay awhile</h2></div>
+              <div class="seat-count"><span class="count-icon" aria-hidden="true">♧</span><span id="seat-count">0</span><span>/ 12 seats</span></div>
+            </div>
+
+            <div id="seat-grid" class="seat-grid" aria-label="Student seats"></div>
+
+            <div class="room-footer">
+              <div class="seat-legend"><span class="legend-dot occupied"></span> In class <span class="legend-dot open"></span> Open seat</div>
+              <span class="floor-note"><span aria-hidden="true">✳</span> There's always room to learn.</span>
+            </div>
+          </section>
+        </section>
+
+        <aside class="chat-panel" aria-labelledby="chat-title">
+          <div class="chat-header">
+            <div class="chat-heading-icon" aria-hidden="true">
+              <svg viewBox="0 0 32 32" fill="none"><path d="M6 7.5A3.5 3.5 0 0 1 9.5 4h13A3.5 3.5 0 0 1 26 7.5v9a3.5 3.5 0 0 1-3.5 3.5h-8.1L8 25v-5.5a3.5 3.5 0 0 1-2-3z" fill="currentColor"/><path d="M11 10h10M11 14h7" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/></svg>
+            </div>
+            <div class="chat-title-wrap"><h2 id="chat-title">Class chat</h2><span id="chat-subtitle">A friendly place to say hello</span></div>
+            <span class="chat-live-dot" title="Chat connection status" aria-label="Chat is not connected"></span>
+          </div>
+          <div class="chat-room-info"><span class="chat-room-icon" aria-hidden="true">✳</span><div><strong id="chat-room-name">The classroom lounge</strong><span id="chat-room-code">Start a class to open chat</span></div></div>
+          <div id="messages" class="messages" role="log" aria-live="polite" aria-relevant="additions text">
+            <div class="chat-empty" id="chat-empty">
+              <div class="empty-illustration" aria-hidden="true"><span class="empty-bubble bubble-one">hey!</span><span class="empty-bubble bubble-two">✦</span><span class="empty-face">☺</span></div>
+              <strong>Good conversations start small.</strong>
+              <p>Start a class and say hello to your classmates right here.</p>
+            </div>
+          </div>
+          <form id="chat-form" class="chat-composer">
+            <label class="visually-hidden" for="message-input">Write a message</label>
+            <input id="message-input" type="text" maxlength="300" placeholder="Start a class to chat…" autocomplete="off" enterkeyhint="send" disabled />
+            <button id="send-message" type="submit" aria-label="Send message" disabled><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m4 4 16 7-16 9 3-8z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 12h13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+          </form>
+          <div class="chat-footnote"><span aria-hidden="true">↵</span> Messages are shared live with your class</div>
+        </aside>
+      </main>
+
+      <footer class="page-footer"><span>Made for bright minds & kind classrooms</span><span class="footer-heart" aria-hidden="true">♥</span><span>Classroom Connect</span></footer>
+    </div>
+
+    <dialog id="join-dialog" class="join-dialog" aria-labelledby="join-title">
+      <form id="join-form" class="join-card">
+        <button id="close-join" class="dialog-close" type="button" aria-label="Close">×</button>
+        <div class="join-spark" aria-hidden="true">✳</div>
+        <span class="eyebrow join-eyebrow">YOU'RE INVITED</span>
+        <h2 id="join-title">Find your place.</h2>
+        <p class="join-intro">Pick a name and a little portrait so everyone knows it's you.</p>
+        <div id="join-code-section" class="join-code-section" hidden>
+          <label class="field-label" for="join-code">Class code</label>
+          <input id="join-code" class="name-input code-input" type="text" maxlength="9" placeholder="CC-3K7Q9A" autocomplete="off" autocapitalize="characters" />
+        </div>
+        <label class="field-label" for="display-name">Your name</label>
+        <input id="display-name" class="name-input" type="text" maxlength="24" placeholder="e.g. Jamie" autocomplete="name" enterkeyhint="go" required />
+        <div class="field-label avatar-label">Choose your picture</div>
+        <div id="avatar-options" class="avatar-options" role="radiogroup" aria-label="Choose a profile picture"></div>
+        <p id="join-error" class="join-error" role="alert" hidden></p>
+        <button id="join-submit" class="join-submit" type="submit"><span id="join-submit-label">Join the class</span><span aria-hidden="true">→</span></button>
+        <p class="join-privacy">No account needed. Just bring your curiosity.</p>
+      </form>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
