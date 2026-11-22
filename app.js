@@ -330,12 +330,33 @@
 
   function showErrorToast(error) {
     const messages = {
-      'unavailable-id': 'That class code is already in use. Try starting again for a fresh code.',
-      'peer-unavailable': 'The teacher’s classroom is offline. Ask them to start class and try again.',
-      'network': 'The connection was interrupted. Check your internet and try again.',
+      'unavailable-id': 'That class code is already in use. Ask the teacher to start a new class.',
+      'peer-unavailable': 'The teacher’s classroom could not be found. Check the class code and make sure the teacher has started class.',
+      'network': 'Could not reach the live connection service. Check the internet connection and try again.',
+      'server-error': 'The live connection service did not respond. Please try again shortly.',
+      'socket-error': 'The live connection service could not be reached from this network.',
+      'socket-closed': 'The live connection service closed unexpectedly. Please try again.',
+      'webrtc': 'Your browser could not establish a direct connection. Try again on another network or browser.',
       'browser-incompatible': 'This browser does not support live classroom connections.',
     };
     return messages[error] || 'Could not connect right now. Please try again in a moment.';
+  }
+
+  function failPendingJoin(message) {
+    if (role === 'student') return;
+    clearTimeout(joinTimer);
+    joinRequestId += 1;
+    $('#join-submit').disabled = false;
+    $('#join-submit-label').textContent = 'Join the class';
+    showJoinError(message);
+    setStatus('Could not join class', 'error');
+    const failedConnection = studentConnection;
+    studentConnection = null;
+    if (failedConnection) {
+      try { failedConnection.close(); } catch (_) { /* already closed */ }
+    }
+    if (peer && !peer.destroyed && role !== 'host') peer.destroy();
+    if (role !== 'host') peer = null;
   }
 
   function ensurePeerLibrary() {
@@ -617,9 +638,15 @@
         setStatus('Reconnecting…', 'busy');
         clearTimeout(reconnectTimer);
         reconnectTimer = window.setTimeout(() => connectStudentToHost(studentPeer), 1500);
+      } else if (role !== 'host') {
+        failPendingJoin('The connection closed before the teacher confirmed your seat. Check the class code and try again.');
       }
     });
     connection.on('error', (error) => {
+      if (role !== 'student' && role !== 'host') {
+        failPendingJoin(showErrorToast(error && error.type));
+        return;
+      }
       if (role === 'student') {
         if (error.type === 'peer-unavailable') {
           setStatus('Waiting for teacher', 'error');
@@ -665,7 +692,14 @@
     expectedRoomEnd = false;
     role = 'visitor';
     if (peer && !peer.destroyed) peer.destroy();
-    const studentPeer = new window.Peer({ debug: 1 });
+    studentConnection = null;
+    clearTimeout(joinTimer);
+    // Cover both stages: connecting to PeerServer and opening the WebRTC data channel.
+    // Previously the UI could wait forever if either stage never emitted its open event.
+    joinTimer = window.setTimeout(() => {
+      failPendingJoin('Still unable to reach the classroom. Check the class code, make sure the teacher is online, and try again.');
+    }, 25000);
+    const studentPeer = new window.Peer({ debug: 2 });
     peer = studentPeer;
     studentPeer.on('open', () => {
       if (requestId === joinRequestId && peer === studentPeer) connectStudentToHost(studentPeer);
@@ -682,11 +716,7 @@
         clearTimeout(reconnectTimer);
         reconnectTimer = window.setTimeout(() => connectStudentToHost(studentPeer), 5000);
       } else if (role !== 'student') {
-        clearTimeout(joinTimer);
-        $('#join-submit').disabled = false;
-        $('#join-submit-label').textContent = 'Join the class';
-        showJoinError(showErrorToast(error.type));
-        setStatus('Could not join class', 'error');
+        failPendingJoin(showErrorToast(error.type));
       }
     });
   }
